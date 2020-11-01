@@ -1,0 +1,45 @@
+import 'package:flutter/foundation.dart';
+import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+import 'package:shopify/models/exception.dart';
+
+class Product with ChangeNotifier {
+  final String id;
+  final String title;
+  final String description;
+  final double price;
+  final String imageUrl;
+  bool isFavorite;
+
+  Product(
+      {@required this.id,
+      @required this.title,
+      @required this.description,
+      @required this.price,
+      @required this.imageUrl,
+      this.isFavorite = false});
+
+  Future<void> toogleFavoriteStatus(String authToken,String userId) async {
+    var url = 'https://flutterapp-4bc5c.firebaseio.com/userFavorites/$userId/${id}.json?auth=${authToken}';
+
+    final oldStatus = isFavorite;
+    isFavorite = !isFavorite;
+    notifyListeners();
+    try {
+    final response=  await http.put(url, body: json.encode(isFavorite));
+    print(oldStatus);
+    if(response.statusCode >=400)
+    {
+
+      isFavorite = oldStatus;
+
+      notifyListeners();
+    }
+    notifyListeners();
+    } catch (error) {
+      isFavorite = oldStatus;
+    }
+  }
+}
